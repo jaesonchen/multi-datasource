@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd " >
+
+	<!-- 加载配置文件 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">	
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
+		<property name="locations">
+		  <value>classpath:db.properties</value>
+		</property>
+	</bean>
+	
+	<!-- 数据源配置 -->
+	<bean id="masterDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${env.mcd.db.master.driver}" />
+        <property name="url" value="${env.mcd.db.master.url}" />
+        <property name="username" value="${env.mcd.db.master.username}" />
+        <property name="password" value="${env.mcd.db.master.password}" />
+    </bean>
+	<bean id="slaveDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${env.mcd.db.slave.driver}" />
+        <property name="url" value="${env.mcd.db.slave.url}" />
+        <property name="username" value="${env.mcd.db.slave.username}" />
+        <property name="password" value="${env.mcd.db.slave.password}" />
+    </bean>
+    <bean id="dataSource" class="com.asiainfo.multidatasource.datasource.DynamicDataSource">
+        <property name="targetDataSources">
+            <map key-type="java.lang.String">
+                <entry key="master" value-ref="masterDataSource" />
+                <entry key="slave" value-ref="slaveDataSource" />
+            </map>
+        </property>
+        <property name="defaultTargetDataSource" ref="slaveDataSource" />
+    </bean>
+    <!-- jdbcTemplate管理 -->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+    	<property name="dataSource" ref="dataSource" />
+    </bean>
+        
+	<!-- 启用注解事物 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" order="2" />
+
+    <aop:aspectj-autoproxy proxy-target-class="true" />
+</beans>
