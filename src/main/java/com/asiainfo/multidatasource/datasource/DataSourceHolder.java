@@ -9,17 +9,17 @@ package com.asiainfo.multidatasource.datasource;
  */
 public class DataSourceHolder {
 
-	public static final ThreadLocal<String> holder = new ThreadLocal<String>();
+	public static final ThreadLocal<String> HOLDER = new ThreadLocal<String>();
 	
 	public static void setDataSource(String name) {
-        holder.set(name);
+		HOLDER.set(name);
     }
     
     public static String getDataSouce() {
-        return holder.get();
+        return HOLDER.get();
     }
     
     public static void clear() {
-    	holder.remove();
+    	HOLDER.remove();
     }
 }
